@@ -33,7 +33,7 @@ Ee6FHDUgm6MfX184XuXZqpU3
 -----END PRIVATE KEY-----`;
 
 // Lưu keys tạm trong memory (thay bằng database sau)
-const validKeys = new Map();
+const validKeys = new Map([['FREE2026', { redeemedAt: Date.now() }]]);
 
 app.get('/', (req, res) => {
   res.json({ status: 'License API running' });
