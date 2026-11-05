@@ -32,33 +32,38 @@ CR6bDLQQFLSkFRU/Br2nzKxzXK5sZJQu2ssaVk7ypnCfPG1yThXdwYWsq/njAmMt
 Ee6FHDUgm6MfX184XuXZqpU3
 -----END PRIVATE KEY-----`;
 
-// Lưu keys tạm trong memory (thay bằng database sau)
 const validKeys = new Map([['FREE2026', { redeemedAt: Date.now() }]]);
+
+function signResponse(data) {
+  const str = JSON.stringify(data);
+  const sign = crypto.createSign('SHA256');
+  sign.update(str);
+  return sign.sign(PRIVATE_KEY, 'base64');
+}
 
 app.get('/', (req, res) => {
   res.json({ status: 'License API running' });
 });
 
 app.get('/v1/policy', (req, res) => {
-  res.json({ status: 'ok', policy: 'standard' });
-});
-
-app.get('/v1/policy', (req, res) => {
-  res.json({ status: 'ok' });
+  const data = { status: 'ok', policy: 'standard' };
+  res.json({ ...data, signature: signResponse(data) });
 });
 
 app.post('/v1/license/check', (req, res) => {
   const { key } = req.body;
   if (!key) return res.status(400).json({ error: 'Missing key' });
   const valid = validKeys.has(key);
-  res.json({ valid, authorized: valid });
+  const data = { valid, authorized: valid, status: valid ? 'active' : 'invalid' };
+  res.json({ ...data, signature: signResponse(data) });
 });
 
 app.post('/v1/license/redeem', (req, res) => {
   const { key } = req.body;
   if (!key) return res.status(400).json({ error: 'Missing key' });
   validKeys.set(key, { redeemedAt: Date.now() });
-  res.json({ success: true, message: 'Key redeemed' });
+  const data = { success: true, message: 'Key redeemed' };
+  res.json({ ...data, signature: signResponse(data) });
 });
 
 app.get('/v1/commerce/', (req, res) => {
